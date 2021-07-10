@@ -50,15 +50,21 @@ if [ -z "${KOPIA_SERVER_USERNAME}" ]; then
 fi
 
 # HTTP server password (basic auth)
-if [ -z "${DE_KOPIA_SERVER_PASSWORD}" ]; then
+if [ ! -z "${DE_KOPIA_SERVER_PASSWORD}" ]; then
   echo "set KOPIA_SERVER_PASSWORD"
-  export KOPIA_SERVER_PASSWORD=kopiaserverpassword
+  export KOPIA_SERVER_PASSWORD=${DE_KOPIA_SERVER_PASSWORD}
 fi
 
 # Repository password
 if [ ! -z "${DE_KOPIA_REPOSITORY_PASSWORD}" ]; then
   echo "set KOPIA_PASSWORD"
   export KOPIA_PASSWORD=${DE_KOPIA_REPOSITORY_PASSWORD}
+fi
+
+# Client password
+if [ ! -z "${DE_KOPIA_CLIENT_PASSWORD}" ]; then
+  echo "set KOPIA_PASSWORD"
+  export KOPIA_PASSWORD=${DE_KOPIA_CLIENT_PASSWORD}
 fi
 
 # Force particular auth cookie signing key
@@ -107,7 +113,7 @@ if [ ! -z "${DE_KOPIA_FIRST_BOOT}" ]; then
 
   if [ -z "${DE_KOPIA_BLOCK_HASH}" ]; then
     echo "benchmarking crypto"
-    /app/kopia benchmark crypto >/app/config/crypto.txt
+    /app/kopia benchmark crypto --repeat 100 >/app/config/crypto.txt
     blockhash=$(tail -1 /app/config/crypto.txt | grep -oP 'block-hash(\S*)' | grep -oP '[A-Z](\S*)')
     echo "best blockhash option $blockhash"
     export DE_KOPIA_BLOCK_HASH=$blockhash
@@ -115,14 +121,16 @@ if [ ! -z "${DE_KOPIA_FIRST_BOOT}" ]; then
 
   if [ -z "${DE_KOPIA_COMPRESSION}" ]; then
     echo "benchmarking compression"
-    /app/kopia benchmark compression --verify-stable --repeat 10 >/app/config/compression.txt
+    /app/kopia benchmark compression --verify-stable --repeat 100 >/app/config/compression.txt
     compression=$(grep -oP ' 0. (\S*)' /app/config/compression.txt | grep -oP '[a-zA-Z].*')
     echo "best option $compression"
     export DE_KOPIA_COMPRESSION=$compression
   fi
+fi
 
-  # https://kopia.io/docs/reference/command-line/common/repository-create-azure/
-  if [ ! -z "${DE_AZURE_STORAGE_KEY}" ]; then
+# https://kopia.io/docs/reference/command-line/common/repository-create-azure/
+if [ ! -z "${DE_AZURE_STORAGE_KEY}" ]; then
+  if [ ! -z "${DE_KOPIA_FIRST_BOOT}" ]; then
     echo "create Azure repository"
     /app/kopia repository create azure \
       --block-hash ${DE_KOPIA_BLOCK_HASH:-BLAKE3-256-128} \
@@ -133,10 +141,22 @@ if [ ! -z "${DE_KOPIA_FIRST_BOOT}" ]; then
       --password ${DE_KOPIA_REPOSITORY_PASSWORD} \
       --container ${DE_AZURE_CONTAINER} ${DE_AZURE_SAS_TOKEN} \
       --storage-domain ${DE_AZURE_STORAGE_DOMAIN}
+  else
+    echo "connect to Azure repository"
+    /app/kopia repository connect azure \
+      --content-cache-size-mb ${DE_KOPIA_CACHE_SIZE:-5000} \
+      --enable-actions ${DE_KOPIA_MAX_DOWNLOAD_SPEED} ${DE_KOPIA_MAX_UPLOAD_SPEED} \
+      --override-username ${DE_KOPIA_USERNAME:-kopia} \
+      --override-hostname ${DE_KOPIA_HOSTNAME:-kopiaserver} \
+      --password ${DE_KOPIA_REPOSITORY_PASSWORD} \
+      --container ${DE_AZURE_CONTAINER} ${DE_AZURE_SAS_TOKEN} \
+      --storage-domain ${DE_AZURE_STORAGE_DOMAIN}
   fi
+fi
 
-  # https://kopia.io/docs/reference/command-line/common/repository-create-b2/
-  if [ ! -z "${DE_B2_KEY}" ]; then
+# https://kopia.io/docs/reference/command-line/common/repository-create-b2/
+if [ ! -z "${DE_B2_KEY}" ]; then
+  if [ ! -z "${DE_KOPIA_FIRST_BOOT}" ]; then
     echo "create Backblaze B2 repository"
     /app/kopia repository create b2 \
       --block-hash ${DE_KOPIA_BLOCK_HASH:-BLAKE3-256-128} \
@@ -146,10 +166,21 @@ if [ ! -z "${DE_KOPIA_FIRST_BOOT}" ]; then
       --override-hostname ${DE_KOPIA_HOSTNAME:-kopiaserver} \
       --password ${DE_KOPIA_REPOSITORY_PASSWORD} \
       --bucket ${DE_B2_BUCKET}
+  else
+    echo "connect to Backblaze B2 repository"
+    /app/kopia repository connect b2 \
+      --content-cache-size-mb ${DE_KOPIA_CACHE_SIZE:-5000} \
+      --enable-actions ${DE_KOPIA_MAX_DOWNLOAD_SPEED} ${DE_KOPIA_MAX_UPLOAD_SPEED} \
+      --override-username ${DE_KOPIA_USERNAME:-kopia} \
+      --override-hostname ${DE_KOPIA_HOSTNAME:-kopiaserver} \
+      --password ${DE_KOPIA_REPOSITORY_PASSWORD} \
+      --bucket ${DE_B2_BUCKET}
   fi
+fi
 
-  # https://kopia.io/docs/reference/command-line/common/repository-create-s3/
-  if [ ! -z "${DE_AWS_SECRET_ACCESS_KEY}" ]; then
+# https://kopia.io/docs/reference/command-line/common/repository-create-s3/
+if [ ! -z "${DE_AWS_SECRET_ACCESS_KEY}" ]; then
+  if [ ! -z "${DE_KOPIA_FIRST_BOOT}" ]; then
     echo "create S3 repository"
     /app/kopia repository create s3 \
       --block-hash ${DE_KOPIA_BLOCK_HASH:-BLAKE3-256-128} \
@@ -160,10 +191,22 @@ if [ ! -z "${DE_KOPIA_FIRST_BOOT}" ]; then
       --password ${DE_KOPIA_REPOSITORY_PASSWORD} \
       --bucket ${DE_S3_BUCKET} \
       --endpoint ${DE_S3_ENDPOINT} ${DE_S3_REGION}
+  else
+    echo "connect to S3 repository"
+    /app/kopia repository connect s3 \
+      --content-cache-size-mb ${DE_KOPIA_CACHE_SIZE:-5000} \
+      --enable-actions ${DE_KOPIA_MAX_DOWNLOAD_SPEED} ${DE_KOPIA_MAX_UPLOAD_SPEED} \
+      --override-username ${DE_KOPIA_USERNAME:-kopia} \
+      --override-hostname ${DE_KOPIA_HOSTNAME:-kopiaserver} \
+      --password ${DE_KOPIA_REPOSITORY_PASSWORD} \
+      --bucket ${DE_S3_BUCKET} \
+      --endpoint ${DE_S3_ENDPOINT} ${DE_S3_REGION}
   fi
+fi
 
-  # https://kopia.io/docs/reference/command-line/common/repository-create-webdav/
-  if [ ! -z "${DE_WEBDAV_PASSWORD}" ]; then
+# https://kopia.io/docs/reference/command-line/common/repository-create-webdav/
+if [ ! -z "${DE_WEBDAV_PASSWORD}" ]; then
+  if [ ! -z "${DE_KOPIA_FIRST_BOOT}" ]; then
     echo "create WebDAV repository"
     /app/kopia repository create webdav \
       --block-hash ${DE_KOPIA_BLOCK_HASH:-BLAKE3-256-128} \
@@ -173,10 +216,21 @@ if [ ! -z "${DE_KOPIA_FIRST_BOOT}" ]; then
       --override-hostname ${DE_KOPIA_HOSTNAME:-kopiaserver} \
       --password ${DE_KOPIA_REPOSITORY_PASSWORD} \
       --url ${DE_WEBDAV_URL} ${DE_WEBDAV_FLAT}
+  else
+    echo "connect to WebDAV repository"
+    /app/kopia repository connect webdav \
+      --content-cache-size-mb ${DE_KOPIA_CACHE_SIZE:-5000} \
+      --enable-actions ${DE_KOPIA_MAX_DOWNLOAD_SPEED} ${DE_KOPIA_MAX_UPLOAD_SPEED} \
+      --override-username ${DE_KOPIA_USERNAME:-kopia} \
+      --override-hostname ${DE_KOPIA_HOSTNAME:-kopiaserver} \
+      --password ${DE_KOPIA_REPOSITORY_PASSWORD} \
+      --url ${DE_WEBDAV_URL} ${DE_WEBDAV_FLAT}
   fi
+fi
 
+if [ ! -z "${DE_KOPIA_FIRST_BOOT}" ]; then
   /app/kopia policy set --global \
-    --compression ${DE_KOPIA_COMPRESSION:-s2-default} \
+    --compression ${DE_KOPIA_COMPRESSION} \
     --keep-annual 3 --keep-daily 7 --keep-hourly 0 --keep-latest 0 --keep-monthly 12 \
     --keep-weekly 4 ${DE_KOPIA_MAX_FILE_SIZE} --add-dot-ignore .kopiaignore
 
@@ -190,46 +244,40 @@ fi
 # -------------------------------------------------------------------------------
 # Client related
 
-if [ ! -z "${DE_KOPIA_ADD_CLIENTS}" ]; then
-  echo "Adding clients"
+if [ ! -z "${DE_KOPIA_USERS}" ]; then
+
   /app/kopia repository connect from-config \
-    --file=/app/config/repository.config \
+    --file /app/config/repository.config \
+    --override-username ${DE_KOPIA_USERNAME:-kopia} \
+    --override-hostname ${DE_KOPIA_HOSTNAME:-kopiaserver} \
     --password ${DE_KOPIA_REPOSITORY_PASSWORD}
-  cat >"/app/password.awk" <<EOF
-BEGIN {
-    srand();
-    chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
-    s = "";
-    for(i=0;i<32;i++) {
-        s = s "" substr(chars, int(rand()*62), 1);
-    }
-    print s
-}
-EOF
 
-  while IFS=',' read -ra CLIENTS; do
-    for i in "${CLIENTS[@]}"; do
-      a=$(awk -f /app/password.awk)
-      echo "$i --user-password $a" >>/app/config/clientlist.txt
+  while IFS=',' read -ra USERS; do
+    for i in "${USERS[@]}"; do
+      echo "$i --user-password" $(tr </dev/urandom -cd 'a-zA-Z0-9' | head -c 32) >>/app/config/userlist.txt
     done
-  done <<<"$DE_KOPIA_ADD_CLIENTS"
+  done <<<"$DE_KOPIA_USERS"
 
-  while read client; do
-    /app/kopia server users add $client
-  done </app/config/clientlist.txt
-
-  rm /app/password.awk
+  if [ ! -z "${DE_KOPIA_UPDATE_USERS}" ]; then
+    echo "Updating user passwords"
+    while read user; do
+      /app/kopia server users set $user
+    done </app/config/userlist.txt
+  else
+    echo "Adding users"
+    while read user; do
+      /app/kopia server users add $user
+    done </app/config/userlist.txt
+  fi
 fi
 
 if [ ! -z "${DE_KOPIA_CLIENT}" ]; then
   echo "connect to repository"
-  /app/kopia repository connect server --url=https://kopia:51515 \
-    --override-username=${DE_KOPIA_USERNAME:-kopia} \
-    --override-hostname=${DE_KOPIA_HOSTNAME:-kopia} --password ${DE_KOPIA_CLIENT_PASSWORD} \
+  /app/kopia repository connect server --url https://kopia:51515 \
+    --override-username ${DE_KOPIA_USERNAME:-kopia} \
+    --override-hostname ${DE_KOPIA_HOSTNAME:-kopia} \
+    --enable-actions \
     --server-cert-fingerprint ${DE_KOPIA_SERVER_FINGERPRINT}
-
-  /app/kopia repository set-client --hostname ${DE_KOPIA_HOSTNAME:-kopia} \
-    --username ${DE_KOPIA_USERNAME:-kopia}
 fi
 
 if [ ! -z "${DE_KOPIA_SNAPSHOT_TIME}" ]; then
@@ -271,15 +319,6 @@ EOF
     ${DE_KOPIA_USERNAME:-kopia}@${DE_KOPIA_HOSTNAME:-kopia}:/app/data \
     --action-command-mode ${DE_KOPIA_ACTION_MODE:-essential} \
     --after-folder-action /app/success.sh
-fi
-
-if [ ! -z "${DE_KOPIA_CLIENT}" ]; then
-  echo "refresh server config"
-
-  /app/kopia server refresh --url=https://kopia:51515 \
-    --server-username=${KOPIA_SERVER_USERNAME:-kopia} \
-    --server-password=${DE_KOPIA_SERVER_PASSWORD:-kopia} \
-    --server-cert-fingerprint ${DE_KOPIA_SERVER_FINGERPRINT}
 fi
 
 if [ ! -z "${DE_KOPIA_CLIENT}" ]; then

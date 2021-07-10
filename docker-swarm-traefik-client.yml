@@ -12,16 +12,11 @@ services:
       - kopia_data:/app/data
     secrets: # https://docs.docker.com/compose/compose-file/compose-file-v3/#secrets
       - kopia_client_password
-      - kopia_server_password
     networks: # https://docs.docker.com/compose/compose-file/compose-file-v3/#networks
       # External overlay network to connect to Repo Server
       - kopia
     environment: # https://docs.docker.com/compose/compose-file/compose-file-v3/#environment
       - DE_KOPIA_CLIENT=true
-      # HTTP Auth
-      - KOPIA_SERVER_USERNAME=kopia
-      - DE_KOPIA_SERVER_PASSWORD=DOCKER-SECRET->kopia_server_password
-      # Client Config
       - DE_KOPIA_USERNAME=kopia
       - DE_KOPIA_HOSTNAME=kopiaclient
       - DE_KOPIA_CLIENT_PASSWORD=DOCKER-SECRET->kopia_client_password
