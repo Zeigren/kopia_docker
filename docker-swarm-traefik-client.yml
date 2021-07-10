@@ -1,0 +1,44 @@
+version: "3.8" # https://docs.docker.com/compose/compose-file/compose-file-v3/
+services:
+  kopia:
+    image: zeigren/kopia:latest # https://docs.docker.com/compose/compose-file/compose-file-v3/#image
+    # https://hub.docker.com/r/zeigren/kopia
+    # https://github.com/kopia/kopia
+    # https://kopia.io/
+    volumes: # https://docs.docker.com/compose/compose-file/compose-file-v3/#volumes
+      - kopia_config:/app/config
+      - kopia_cache:/app/cache
+      # Mount stuff you want to backup in /app/data
+      - kopia_data:/app/data
+    secrets: # https://docs.docker.com/compose/compose-file/compose-file-v3/#secrets
+      - kopia_client_password
+      - kopia_server_password
+    networks: # https://docs.docker.com/compose/compose-file/compose-file-v3/#networks
+      # External overlay network to connect to Repo Server
+      - kopia
+    environment: # https://docs.docker.com/compose/compose-file/compose-file-v3/#environment
+      - DE_KOPIA_CLIENT=true
+      # HTTP Auth
+      - KOPIA_SERVER_USERNAME=kopia
+      - DE_KOPIA_SERVER_PASSWORD=DOCKER-SECRET->kopia_server_password
+      # Client Config
+      - DE_KOPIA_USERNAME=kopia
+      - DE_KOPIA_HOSTNAME=kopiaclient
+      - DE_KOPIA_CLIENT_PASSWORD=DOCKER-SECRET->kopia_client_password
+      - DE_KOPIA_SERVER_FINGERPRINT=SHA256FINGERPRINT
+      - DE_KOPIA_SNAPSHOT_TIME=01:30
+
+volumes: # https://docs.docker.com/compose/compose-file/compose-file-v3/#volume-configuration-reference
+  kopia_config:
+  kopia_cache:
+  kopia_data:
+
+secrets: # https://docs.docker.com/compose/compose-file/compose-file-v3/#secrets-configuration-reference
+  kopia_client_password:
+    external: true
+  kopia_server_password:
+    external: true
+
+networks: # https://docs.docker.com/compose/compose-file/compose-file-v3/#network-configuration-reference
+  kopia:
+    external: true

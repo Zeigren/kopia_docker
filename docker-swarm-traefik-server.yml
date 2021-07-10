@@ -1,0 +1,56 @@
+version: "3.8" # https://docs.docker.com/compose/compose-file/compose-file-v3/
+services:
+  kopia:
+    image: zeigren/kopia:latest # https://docs.docker.com/compose/compose-file/compose-file-v3/#image
+    # https://hub.docker.com/r/zeigren/kopia
+    # https://github.com/kopia/kopia
+    # https://kopia.io/
+    volumes: # https://docs.docker.com/compose/compose-file/compose-file-v3/#volumes
+      - kopia_config:/app/config
+      - kopia_cache:/app/cache
+    secrets: # https://docs.docker.com/compose/compose-file/compose-file-v3/#secrets
+      - kopia.cert
+      - kopia.key
+      - kopia_repository_password
+      - kopia_server_password
+    networks: # https://docs.docker.com/compose/compose-file/compose-file-v3/#networks
+      - traefik
+      - kopia
+    environment: # https://docs.docker.com/compose/compose-file/compose-file-v3/#environment
+      # Remove after first run
+      - DE_KOPIA_FIRST_BOOT=true
+      # HTTP Auth
+      - KOPIA_SERVER_USERNAME=kopia
+      - DE_KOPIA_SERVER_PASSWORD=DOCKER-SECRET->kopia_server_password
+      # Repository info
+      - DE_KOPIA_USERNAME=kopia
+      - DE_KOPIA_HOSTNAME=kopiaserver
+      - DE_KOPIA_REPOSITORY_PASSWORD=DOCKER-SECRET->kopia_repository_password
+    deploy: # https://docs.docker.com/compose/compose-file/compose-file-v3/#deploy
+      labels: # https://docs.docker.com/compose/compose-file/compose-file-v3/#labels-1
+        # Essential traefik labels https://doc.traefik.io/traefik/providers/docker/
+        - "traefik.enable=true"
+        - "traefik.http.routers.kopia.entrypoints=websecure"
+        - "traefik.http.routers.kopia.rule=Host(`kopia.yourdomain.test`)"
+        - "traefik.http.services.kopia.loadbalancer.server.scheme=https"
+        - "traefik.http.services.kopia.loadbalancer.server.port=51515" # Port traefik needs to route traffic to
+
+volumes: # https://docs.docker.com/compose/compose-file/compose-file-v3/#volume-configuration-reference
+  kopia_config:
+  kopia_cache:
+
+secrets: # https://docs.docker.com/compose/compose-file/compose-file-v3/#secrets-configuration-reference
+  kopia.cert:
+    external: true
+  kopia.key:
+    external: true
+  kopia_repository_password:
+    external: true
+  kopia_server_password:
+    external: true
+
+networks: # https://docs.docker.com/compose/compose-file/compose-file-v3/#network-configuration-reference
+  traefik:
+    external: true
+  kopia:
+    external: true
