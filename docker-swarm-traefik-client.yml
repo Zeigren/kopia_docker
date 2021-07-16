@@ -1,7 +1,7 @@
 version: "3.8" # https://docs.docker.com/compose/compose-file/compose-file-v3/
 services:
   kopia:
-    image: zeigren/kopia:latest # https://docs.docker.com/compose/compose-file/compose-file-v3/#image
+    image: zeigren/kopia:latest # ghcr.io/zeigren/kopia_docker:latest
     # https://hub.docker.com/r/zeigren/kopia
     # https://github.com/kopia/kopia
     # https://kopia.io/

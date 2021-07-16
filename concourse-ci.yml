@@ -1,8 +1,7 @@
-
 # https://materialdesignicons.com/
 # https://concourse-ci.org/resources.html
 resources:
-# https://github.com/concourse/git-resource
+  # https://github.com/concourse/git-resource
   - name: git-repo
     type: git
     icon: git
@@ -12,14 +11,14 @@ resources:
       uri: https://github.com/Zeigren/kopia_docker.git
       branch: main
 
-# https://github.com/concourse/registry-image-resource
+  # https://github.com/concourse/registry-image-resource
   - name: github-image
     type: registry-image
     icon: github
     public: true
     check_every: never
     source:
-      repository: ghcr.io/Zeigren/kopia_docker
+      repository: ghcr.io/zeigren/kopia_docker
       username: Zeigren
       password: ((github_token))
 
@@ -65,13 +64,13 @@ jobs:
           run:
             path: build
       - in_parallel:
-        - put: github-image
-          params:
-            image: image/image.tar
-            version: ((.:version-tag))
-            bump_aliases: true
-        - put: dockerhub-image
-          params:
-            image: image/image.tar
-            version: ((.:version-tag))
-            bump_aliases: true
+          - put: github-image
+            params:
+              image: image/image.tar
+              version: ((.:version-tag))
+              bump_aliases: true
+          - put: dockerhub-image
+            params:
+              image: image/image.tar
+              version: ((.:version-tag))
+              bump_aliases: true
