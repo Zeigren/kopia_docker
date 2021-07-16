@@ -119,10 +119,12 @@ Any that begin with `DE_` can use Docker secrets. Look at the documentation for 
 - `DE_KOPIA_CLIENT` - set to true for client mode
 - `DE_KOPIA_CLIENT_PASSWORD` - password used to authenticate client with Repository Server
 - `DE_KOPIA_SERVER_FINGERPRINT` - SHA256 hash of the Repository Server certificate
-- `DE_KOPIA_SNAPSHOT_TIME` - Set daily backup schedule time `HH:mm` format
+- `DE_KOPIA_SERVER_URL` - change the server url to connect to
+- `DE_KOPIA_SNAPSHOT_TIME` - Set daily backup schedule time `HH:mm` format, this currently is GMT and is not affected by `TIME_ZONE`
 - `HEALTHCHECKS_START_URL` - pings an endpoint with curl before backing up
   - I made a [healthchecks.io](https://github.com/Zeigren/healthchecks-docker) docker stack as well
 - `HEALTHCHECKS_SUCCESS_URL` - pings an endpoint with curl on successful back up
+  - If using `HEALTHCHECKS_SUCCESS_URL` you can also set `DE_KOPIA_SNAPSHOT_VERIFY` to a number between `1-100` to verify that percentage of the snapshot
 
 #### Other Environment Variables
 

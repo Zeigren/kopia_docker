@@ -113,7 +113,7 @@ if [ ! -z "${DE_KOPIA_FIRST_BOOT}" ]; then
 
   if [ -z "${DE_KOPIA_BLOCK_HASH}" ]; then
     echo "benchmarking crypto"
-    /app/kopia benchmark crypto --repeat 100 >/app/config/crypto.txt
+    kopia benchmark crypto --repeat 100 >/app/config/crypto.txt
     blockhash=$(tail -1 /app/config/crypto.txt | grep -oP 'block-hash(\S*)' | grep -oP '[A-Z](\S*)')
     echo "best blockhash option $blockhash"
     export DE_KOPIA_BLOCK_HASH=$blockhash
@@ -121,7 +121,7 @@ if [ ! -z "${DE_KOPIA_FIRST_BOOT}" ]; then
 
   if [ -z "${DE_KOPIA_COMPRESSION}" ]; then
     echo "benchmarking compression"
-    /app/kopia benchmark compression --verify-stable --repeat 100 >/app/config/compression.txt
+    kopia benchmark compression --verify-stable --repeat 100 >/app/config/compression.txt
     compression=$(grep -oP ' 0. (\S*)' /app/config/compression.txt | grep -oP '[a-zA-Z].*')
     echo "best option $compression"
     export DE_KOPIA_COMPRESSION=$compression
@@ -132,7 +132,7 @@ fi
 if [ ! -z "${DE_AZURE_STORAGE_KEY}" ]; then
   if [ ! -z "${DE_KOPIA_FIRST_BOOT}" ]; then
     echo "create Azure repository"
-    /app/kopia repository create azure \
+    kopia repository create azure \
       --block-hash ${DE_KOPIA_BLOCK_HASH:-BLAKE3-256-128} \
       --content-cache-size-mb ${DE_KOPIA_CACHE_SIZE:-5000} \
       --enable-actions ${DE_KOPIA_MAX_DOWNLOAD_SPEED} ${DE_KOPIA_MAX_UPLOAD_SPEED} \
@@ -143,7 +143,7 @@ if [ ! -z "${DE_AZURE_STORAGE_KEY}" ]; then
       --storage-domain ${DE_AZURE_STORAGE_DOMAIN}
   else
     echo "connect to Azure repository"
-    /app/kopia repository connect azure \
+    kopia repository connect azure \
       --content-cache-size-mb ${DE_KOPIA_CACHE_SIZE:-5000} \
       --enable-actions ${DE_KOPIA_MAX_DOWNLOAD_SPEED} ${DE_KOPIA_MAX_UPLOAD_SPEED} \
       --override-username ${DE_KOPIA_USERNAME:-kopia} \
@@ -158,7 +158,7 @@ fi
 if [ ! -z "${DE_B2_KEY}" ]; then
   if [ ! -z "${DE_KOPIA_FIRST_BOOT}" ]; then
     echo "create Backblaze B2 repository"
-    /app/kopia repository create b2 \
+    kopia repository create b2 \
       --block-hash ${DE_KOPIA_BLOCK_HASH:-BLAKE3-256-128} \
       --content-cache-size-mb ${DE_KOPIA_CACHE_SIZE:-5000} \
       --enable-actions ${DE_KOPIA_MAX_DOWNLOAD_SPEED} ${DE_KOPIA_MAX_UPLOAD_SPEED} \
@@ -168,7 +168,7 @@ if [ ! -z "${DE_B2_KEY}" ]; then
       --bucket ${DE_B2_BUCKET}
   else
     echo "connect to Backblaze B2 repository"
-    /app/kopia repository connect b2 \
+    kopia repository connect b2 \
       --content-cache-size-mb ${DE_KOPIA_CACHE_SIZE:-5000} \
       --enable-actions ${DE_KOPIA_MAX_DOWNLOAD_SPEED} ${DE_KOPIA_MAX_UPLOAD_SPEED} \
       --override-username ${DE_KOPIA_USERNAME:-kopia} \
@@ -182,7 +182,7 @@ fi
 if [ ! -z "${DE_AWS_SECRET_ACCESS_KEY}" ]; then
   if [ ! -z "${DE_KOPIA_FIRST_BOOT}" ]; then
     echo "create S3 repository"
-    /app/kopia repository create s3 \
+    kopia repository create s3 \
       --block-hash ${DE_KOPIA_BLOCK_HASH:-BLAKE3-256-128} \
       --content-cache-size-mb ${DE_KOPIA_CACHE_SIZE:-5000} \
       --enable-actions ${DE_KOPIA_MAX_DOWNLOAD_SPEED} ${DE_KOPIA_MAX_UPLOAD_SPEED} \
@@ -193,7 +193,7 @@ if [ ! -z "${DE_AWS_SECRET_ACCESS_KEY}" ]; then
       --endpoint ${DE_S3_ENDPOINT} ${DE_S3_REGION}
   else
     echo "connect to S3 repository"
-    /app/kopia repository connect s3 \
+    kopia repository connect s3 \
       --content-cache-size-mb ${DE_KOPIA_CACHE_SIZE:-5000} \
       --enable-actions ${DE_KOPIA_MAX_DOWNLOAD_SPEED} ${DE_KOPIA_MAX_UPLOAD_SPEED} \
       --override-username ${DE_KOPIA_USERNAME:-kopia} \
@@ -208,7 +208,7 @@ fi
 if [ ! -z "${DE_WEBDAV_PASSWORD}" ]; then
   if [ ! -z "${DE_KOPIA_FIRST_BOOT}" ]; then
     echo "create WebDAV repository"
-    /app/kopia repository create webdav \
+    kopia repository create webdav \
       --block-hash ${DE_KOPIA_BLOCK_HASH:-BLAKE3-256-128} \
       --content-cache-size-mb ${DE_KOPIA_CACHE_SIZE:-5000} \
       --enable-actions ${DE_KOPIA_MAX_DOWNLOAD_SPEED} ${DE_KOPIA_MAX_UPLOAD_SPEED} \
@@ -218,7 +218,7 @@ if [ ! -z "${DE_WEBDAV_PASSWORD}" ]; then
       --url ${DE_WEBDAV_URL} ${DE_WEBDAV_FLAT}
   else
     echo "connect to WebDAV repository"
-    /app/kopia repository connect webdav \
+    kopia repository connect webdav \
       --content-cache-size-mb ${DE_KOPIA_CACHE_SIZE:-5000} \
       --enable-actions ${DE_KOPIA_MAX_DOWNLOAD_SPEED} ${DE_KOPIA_MAX_UPLOAD_SPEED} \
       --override-username ${DE_KOPIA_USERNAME:-kopia} \
@@ -229,14 +229,14 @@ if [ ! -z "${DE_WEBDAV_PASSWORD}" ]; then
 fi
 
 if [ ! -z "${DE_KOPIA_FIRST_BOOT}" ]; then
-  /app/kopia policy set --global \
+  kopia policy set --global \
     --compression ${DE_KOPIA_COMPRESSION} \
     --keep-annual 3 --keep-daily 7 --keep-hourly 0 --keep-latest 0 --keep-monthly 12 \
     --keep-weekly 4 ${DE_KOPIA_MAX_FILE_SIZE} --add-dot-ignore .kopiaignore
 
   while IFS=',' read -ra COMP; do
     for i in "${COMP[@]}"; do
-      /app/kopia policy set --global --add-never-compress $i
+      kopia policy set --global --add-never-compress $i
     done
   done <<<"$DE_KOPIA_NEVER_COMPRESS"
 fi
@@ -246,7 +246,7 @@ fi
 
 if [ ! -z "${DE_KOPIA_USERS}" ]; then
 
-  /app/kopia repository connect from-config \
+  kopia repository connect from-config \
     --file /app/config/repository.config \
     --override-username ${DE_KOPIA_USERNAME:-kopia} \
     --override-hostname ${DE_KOPIA_HOSTNAME:-kopiaserver} \
@@ -261,19 +261,19 @@ if [ ! -z "${DE_KOPIA_USERS}" ]; then
   if [ ! -z "${DE_KOPIA_UPDATE_USERS}" ]; then
     echo "Updating user passwords"
     while read user; do
-      /app/kopia server users set $user
+      kopia server users set $user
     done </app/config/userlist.txt
   else
     echo "Adding users"
     while read user; do
-      /app/kopia server users add $user
+      kopia server users add $user
     done </app/config/userlist.txt
   fi
 fi
 
 if [ ! -z "${DE_KOPIA_CLIENT}" ]; then
   echo "connect to repository"
-  /app/kopia repository connect server --url https://kopia:51515 \
+  kopia repository connect server --url ${DE_KOPIA_SERVER_URL:-https://kopia:51515} \
     --override-username ${DE_KOPIA_USERNAME:-kopia} \
     --override-hostname ${DE_KOPIA_HOSTNAME:-kopia} \
     --enable-actions \
@@ -282,49 +282,63 @@ fi
 
 if [ ! -z "${DE_KOPIA_SNAPSHOT_TIME}" ]; then
   echo "setting snapshot time"
-  /app/kopia policy set \
+  kopia policy set \
     ${DE_KOPIA_USERNAME:-kopia}@${DE_KOPIA_HOSTNAME:-kopia}:/app/data \
     --snapshot-time ${DE_KOPIA_SNAPSHOT_TIME}
 fi
 
 if [ ! -z "${HEALTHCHECKS_START_URL}" ]; then
   echo "create /app/start.sh"
-  cat >"/app/start.sh" <<EOF
+  cat >"/app/start.sh" <<'EOF'
 #!/bin/sh
 
 set -e
 
-curl -m 10 --retry 3 ${HEALTHCHECKS_START_URL}
+curl -L -m 10 --retry 3 --silent --output /dev/null $HEALTHCHECKS_START_URL
 EOF
   chmod +x /app/start.sh
 
-  /app/kopia policy set \
+  kopia policy set \
     ${DE_KOPIA_USERNAME:-kopia}@${DE_KOPIA_HOSTNAME:-kopia}:/app/data \
     --action-command-mode ${DE_KOPIA_ACTION_MODE:-essential} \
-    --before-folder-action /app/start.sh
+    --before-snapshot-root-action /app/start.sh
 fi
 
 if [ ! -z "${HEALTHCHECKS_SUCCESS_URL}" ]; then
   echo "create /app/start.sh"
-  cat >"/app/success.sh" <<EOF
+  cat >"/app/success.sh" <<'EOF'
 #!/bin/sh
 
 set -e
 
-curl -m 10 --retry 3 ${HEALTHCHECKS_SUCCESS_URL}
+echo "KOPIA_SNAPSHOT_ID:$KOPIA_SNAPSHOT_ID" >&2
+
+kopia snapshot list --max-results 1 --no-retention >&2
+
+if [ ! -z "$DE_KOPIA_SNAPSHOT_VERIFY" ]; then
+kopia snapshot verify --verify-files-percent $DE_KOPIA_SNAPSHOT_VERIFY >&2
+fi
+
+curl -L -m 10 --retry 3 --silent --output /dev/null $HEALTHCHECKS_SUCCESS_URL
+
+echo "" >&2
 EOF
   chmod +x /app/success.sh
 
-  /app/kopia policy set \
+  kopia policy set \
     ${DE_KOPIA_USERNAME:-kopia}@${DE_KOPIA_HOSTNAME:-kopia}:/app/data \
     --action-command-mode ${DE_KOPIA_ACTION_MODE:-essential} \
-    --after-folder-action /app/success.sh
+    --after-snapshot-root-action /app/success.sh
 fi
 
-if [ ! -z "${DE_KOPIA_CLIENT}" ]; then
-  echo "running in client mode"
-  exec "$@" --insecure --enable-actions --timezone ${TIME_ZONE:-Etc/UTC}
+if [ -z "$1" ]; then
+  if [ ! -z "${DE_KOPIA_CLIENT}" ]; then
+    echo "running in client mode"
+    exec kopia server start --insecure --enable-actions --timezone ${TIME_ZONE:-Etc/UTC}
+  else
+    echo "running as repository server"
+    exec kopia server start --tls-cert-file /run/secrets/kopia.cert --tls-key-file /run/secrets/kopia.key --enable-actions --timezone ${TIME_ZONE:-Etc/UTC} --metrics-listen-addr https://0.0.0.0:51515 --address https://0.0.0.0:51515
+  fi
 else
-  echo "running as repository server"
-  exec "$@" --tls-cert-file /run/secrets/kopia.cert --tls-key-file /run/secrets/kopia.key --enable-actions --timezone ${TIME_ZONE:-Etc/UTC} --metrics-listen-addr https://0.0.0.0:51515 --address https://0.0.0.0:51515
+  exec "$@"
 fi
