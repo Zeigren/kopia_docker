@@ -8,7 +8,7 @@
 Tag is the version of Kopia
 
 - latest
-- v0.8.4
+- 0.8.4
 
 ## Links
 
