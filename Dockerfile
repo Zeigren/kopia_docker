@@ -22,9 +22,9 @@ ARG VERSION
 LABEL org.opencontainers.image.created=$DATE \
     org.opencontainers.image.authors="Zeigren" \
     org.opencontainers.image.url="https://github.com/Zeigren/kopia_docker" \
+    org.opencontainers.image.source="https://github.com/Zeigren/kopia_docker" \
     org.opencontainers.image.version=$VERSION \
-    org.opencontainers.image.title="zeigren/kopia" \
-    org.opencontainers.image.source="https://github.com/Zeigren/kopia_docker"
+    org.opencontainers.image.title="zeigren/kopia"
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl ca-certificates \

@@ -16,6 +16,8 @@ Tag is the version of Kopia
 
 ### [GitHub](https://github.com/Zeigren/kopia_docker)
 
+### [ghcr.io](ghcr.io/zeigren/kopia_docker)
+
 ## Usage
 
 Use [Docker Swarm](https://docs.docker.com/engine/swarm/) to deploy. There are examples for using Traefik for SSL termination.
