@@ -1,5 +1,6 @@
 # https://materialdesignicons.com/
 # https://concourse-ci.org/resources.html
+# fly -t kairohm set-pipeline --pipeline kopia --config .\concourse-ci.yml
 resources:
   # https://github.com/concourse/git-resource
   - name: git-repo
@@ -20,7 +21,7 @@ resources:
     source:
       repository: ghcr.io/zeigren/kopia_docker
       username: Zeigren
-      password: ((github_token))
+      password: ((github_token.token))
 
   - name: dockerhub-image
     type: registry-image
@@ -30,7 +31,7 @@ resources:
     source:
       repository: zeigren/kopia
       username: zeigren
-      password: ((dockerhub_password))
+      password: ((dockerhub_password.password))
 
 # https://concourse-ci.org/jobs.html
 jobs:

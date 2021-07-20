@@ -16,7 +16,7 @@ Tag is the version of Kopia
 
 ### [GitHub](https://github.com/Zeigren/kopia_docker)
 
-### [ghcr.io](ghcr.io/zeigren/kopia_docker)
+### [ghcr.io](https://ghcr.io/zeigren/kopia_docker)
 
 ## Usage
 

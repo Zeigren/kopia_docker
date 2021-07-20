@@ -294,7 +294,9 @@ if [ ! -z "${HEALTHCHECKS_START_URL}" ]; then
 
 set -e
 
-curl -L -m 10 --retry 3 --silent --output /dev/null $HEALTHCHECKS_START_URL
+echo "ping $HEALTHCHECKS_START_URL" >&2
+
+curl -fsS -m 10 --retry 5 --output /dev/null $HEALTHCHECKS_START_URL
 EOF
   chmod +x /app/start.sh
 
@@ -319,7 +321,9 @@ if [ ! -z "$DE_KOPIA_SNAPSHOT_VERIFY" ]; then
 kopia snapshot verify --verify-files-percent $DE_KOPIA_SNAPSHOT_VERIFY >&2
 fi
 
-curl -L -m 10 --retry 3 --silent --output /dev/null $HEALTHCHECKS_SUCCESS_URL
+echo "ping $HEALTHCHECKS_SUCCESS_URL" >&2
+
+curl -fsS -m 10 --retry 5 --output /dev/null $HEALTHCHECKS_SUCCESS_URL
 
 echo "" >&2
 EOF
